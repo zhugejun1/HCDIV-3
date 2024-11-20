@@ -1,0 +1,295 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>Changi Area Property Analysis</title>  
+    <script src="https://d3js.org/d3.v7.min.js"></script>  
+    <script src="https://cdn.tailwindcss.com"></script>  
+    <style>  
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');  
+        body {  
+            font-family: 'Poppins', sans-serif;  
+            background: linear-gradient(135deg, #f6f8fc 0%, #f0f4f8 100%);  
+        }  
+        .axis text {  
+            font-size: 12px;  
+            font-weight: 500;  
+        }  
+        .axis path, .axis line {  
+            stroke: #cbd5e1;  
+        }  
+        .grid line {  
+            stroke: #e2e8f0;  
+            stroke-dasharray: 2,2;  
+        }  
+        .tooltip {  
+            position: absolute;  
+            background: rgba(17, 24, 39, 0.95);  
+            color: white;  
+            padding: 1rem;  
+            border-radius: 8px;  
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);  
+            pointer-events: none;  
+            display: none;  
+            backdrop-filter: blur(4px);  
+            border: 1px solid rgba(255, 255, 255, 0.1);  
+        }  
+        .chart-container {  
+            background: white;  
+            border-radius: 16px;  
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);  
+            position: relative;  
+            overflow: hidden;  
+        }  
+        .chart-container::before {  
+            content: '';  
+            position: absolute;  
+            top: 0;  
+            left: 0;  
+            right: 0;  
+            height: 4px;  
+            background: linear-gradient(90deg, #3b82f6, #ef4444);  
+        }  
+        .stat-card {  
+            background: white;  
+            border-radius: 12px;  
+            padding: 1.5rem;  
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);  
+            transition: transform 0.2s ease;  
+        }  
+        .stat-card:hover {  
+            transform: translateY(-2px);  
+        }  
+        .bar {  
+            transition: all 0.3s ease;  
+        }  
+        .bar:hover {  
+            filter: brightness(1.1);  
+        }  
+        .main-title {  
+            background: linear-gradient(90deg, #1a365d, #2563eb);  
+            -webkit-background-clip: text;  
+            background-clip: text;  
+            color: transparent;  
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);  
+        }  
+        .author-info {  
+            border-left: 4px solid #3b82f6;  
+        }  
+    </style>  
+</head>  
+<body class="min-h-screen py-12">  
+    <div class="container mx-auto px-4">  
+        <div class="max-w-4xl mx-auto">  
+            <div class="text-center mb-8">  
+                <h1 class="main-title text-5xl font-bold mb-4">新加坡组屋转售价格</h1>  
+                <div class="author-info inline-block px-4 py-2 bg-white rounded-lg shadow-sm">  
+                    <span class="text-gray-600">作者：</span>  
+                    <span class="font-semibold text-gray-800">ZHUGEJUN</span>  
+                    <span class="mx-2 text-gray-300">|</span>  
+                    <span class="text-gray-600">学号：</span>  
+                    <span class="font-semibold text-gray-800">1009699</span>  
+                </div>  
+            </div>  
+            
+            <h2 class="text-3xl font-bold text-gray-800 mb-2 tracking-tight">Changi Property Insights</h2>  
+            <p class="text-gray-600 mb-8 text-lg">Tracking residential property values in Singapore's eastern region</p>  
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">  
+                <div class="stat-card">  
+                    <div class="text-sm text-gray-500 mb-1">Average Price (2023)</div>  
+                    <div class="text-2xl font-bold text-gray-800" id="avgPrice">Loading...</div>  
+                </div>  
+                <div class="stat-card">  
+                    <div class="text-sm text-gray-500 mb-1">Price Growth</div>  
+                    <div class="text-2xl font-bold text-gray-800" id="priceGrowth">Loading...</div>  
+                </div>  
+                <div class="stat-card">  
+                    <div class="text-sm text-gray-500 mb-1">Price Gap</div>  
+                    <div class="text-2xl font-bold text-gray-800" id="priceGap">Loading...</div>  
+                </div>  
+            </div>  
+            <div class="chart-container p-6">  
+                <div id="chart" class="w-full"></div>  
+                <div id="tooltip" class="tooltip"></div>  
+            </div>  
+        </div>  
+    </div>  
+    <script>  
+        const formatCurrency = new Intl.NumberFormat('en-SG', {  
+            style: 'currency',  
+            currency: 'SGD',  
+            minimumFractionDigits: 0  
+        });  
+
+        const data = [  
+            { year: 2017, "CHANGI ROAD": 450000, "UPPER CHANGI ROAD": 480000 },  
+            { year: 2018, "CHANGI ROAD": 470000, "UPPER CHANGI ROAD": 495000 },  
+            { year: 2019, "CHANGI ROAD": 485000, "UPPER CHANGI ROAD": 510000 },  
+            { year: 2020, "CHANGI ROAD": 495000, "UPPER CHANGI ROAD": 525000 },  
+            { year: 2021, "CHANGI ROAD": 520000, "UPPER CHANGI ROAD": 550000 },  
+            { year: 2022, "CHANGI ROAD": 550000, "UPPER CHANGI ROAD": 580000 },  
+            { year: 2023, "CHANGI ROAD": 580000, "UPPER CHANGI ROAD": 610000 }  
+        ];  
+
+        function updateStats() {  
+            const latestYear = data[data.length - 1];  
+            const firstYear = data[0];  
+            const avgPrice = (latestYear["CHANGI ROAD"] + latestYear["UPPER CHANGI ROAD"]) / 2;  
+            document.getElementById("avgPrice").textContent = formatCurrency.format(avgPrice);  
+            const avgGrowth = (((latestYear["CHANGI ROAD"] / firstYear["CHANGI ROAD"]) + (latestYear["UPPER CHANGI ROAD"] / firstYear["UPPER CHANGI ROAD"])) / 2 - 1) * 100;  
+            document.getElementById("priceGrowth").textContent = `+${avgGrowth.toFixed(1)}%`;  
+            const gap = latestYear["UPPER CHANGI ROAD"] - latestYear["CHANGI ROAD"];  
+            document.getElementById("priceGap").textContent = formatCurrency.format(gap);  
+        }  
+
+        function createChart() {  
+            d3.select("#chart").selectAll("*").remove();  
+            const container = document.getElementById('chart');  
+            const width = container.clientWidth;  
+            const height = Math.min(600, width * 0.6);  
+            const margin = { top: 40, right: 120, bottom: 60, left: 80 };  
+            const svg = d3.select("#chart").append("svg")  
+                .attr("width", width)  
+                .attr("height", height)  
+                .attr("viewBox", `0 0 ${width} ${height}`);  
+
+            const defs = svg.append("defs");  
+            const changiGradient = defs.append("linearGradient")  
+                .attr("id", "changiGradient")  
+                .attr("x1", "0%").attr("y1", "0%")  
+                .attr("x2", "0%").attr("y2", "100%");  
+            changiGradient.append("stop")  
+                .attr("offset", "0%")  
+                .attr("style", "stop-color:#3b82f6;stop-opacity:1");  
+            changiGradient.append("stop")  
+                .attr("offset", "100%")  
+                .attr("style", "stop-color:#60a5fa;stop-opacity:0.8");  
+
+            const upperChangiGradient = defs.append("linearGradient")  
+                .attr("id", "upperChangiGradient")  
+                .attr("x1", "0%").attr("y1", "0%")  
+                .attr("x2", "0%").attr("y2", "100%");  
+            upperChangiGradient.append("stop")  
+                .attr("offset", "0%")  
+                .attr("style", "stop-color:#ef4444;stop-opacity:1");  
+            upperChangiGradient.append("stop")  
+                .attr("offset", "100%")  
+                .attr("style", "stop-color:#f87171;stop-opacity:0.8");  
+
+            const xScale = d3.scaleBand()  
+                .domain(data.map(d => d.year))  
+                .range([margin.left, width - margin.right])  
+                .padding(0.1);  
+
+            const yScale = d3.scaleLinear()  
+                .domain([0, d3.max(data, d => Math.max(d['CHANGI ROAD'], d['UPPER CHANGI ROAD'])) * 1.1])  
+                .range([height - margin.bottom, margin.top]);  
+
+            const colorScale = d3.scaleOrdinal()  
+                .domain(['CHANGI ROAD', 'UPPER CHANGI ROAD'])  
+                .range(['url(#changiGradient)', 'url(#upperChangiGradient)']);  
+
+            svg.append("g")  
+                .attr("class", "grid")  
+                .attr("transform", `translate(${margin.left},0)`)  
+                .call(d3.axisLeft(yScale).tickSize(-width + margin.left + margin.right).tickFormat(""));  
+
+            svg.append("g")  
+                .attr("class", "axis")  
+                .attr("transform", `translate(0,${height - margin.bottom})`)  
+                .call(d3.axisBottom(xScale))  
+                .call(g => g.select(".domain").remove());  
+
+            svg.append("g")  
+                .attr("class", "axis")  
+                .attr("transform", `translate(${margin.left},0)`)  
+                .call(d3.axisLeft(yScale).tickFormat(d => formatCurrency.format(d)))  
+                .call(g => g.select(".domain").remove());  
+
+            const barWidth = xScale.bandwidth() / 2;  
+
+            data.forEach(d => {  
+                ['CHANGI ROAD', 'UPPER CHANGI ROAD'].forEach((location, i) => {  
+                    svg.append("rect")  
+                        .attr("class", "bar")  
+                        .attr("x", xScale(d.year) + i * barWidth)  
+                        .attr("width", barWidth)  
+                        .attr("y", height - margin.bottom)  
+                        .attr("height", 0)  
+                        .attr("fill", colorScale(location))  
+                        .attr("rx", 4)  
+                        .transition()  
+                        .duration(1000)  
+                        .delay(i * 100 + (d.year - 2017) * 200)  
+                        .attr("y", yScale(d[location]))  
+                        .attr("height", height - margin.bottom - yScale(d[location]));  
+                });  
+            });  
+
+            svg.selectAll(".bar")  
+                .on("mouseover", function(event, d) {  
+                    const bar = d3.select(this);  
+                    const location = bar.attr("fill").includes("changi") ? "CHANGI ROAD" : "UPPER CHANGI ROAD";  
+                    const year = Math.floor((bar.attr("x") - margin.left) / xScale.step()) + 2017;  
+                    const value = data.find(d => d.year === year)[location];  
+                    d3.select("#tooltip")  
+                        .style("display", "block")  
+                        .html(`<div class="text-xs text-gray-300 mb-1">${year}</div>  
+                               <div class="font-medium mb-1">${location}</div>  
+                               <div class="text-xl font-bold">${formatCurrency.format(value)}</div>`)  
+                        .style("left", (event.pageX + 10) + "px")  
+                        .style("top", (event.pageY - 40) + "px");  
+                })  
+                .on("mouseout", function() {  
+                    d3.select("#tooltip").style("display", "none");  
+                });  
+
+            const line = d3.line()  
+                .x(d => xScale(d.year) + barWidth / 2)  
+                .y(d => yScale(d.value))  
+                .curve(d3.curveMonotoneX);  
+
+            ['CHANGI ROAD', 'UPPER CHANGI ROAD'].forEach((location, i) => {  
+                const lineData = data.map(d => ({ year: d.year, value: d[location] }));  
+                svg.append("path")  
+                    .datum(lineData)  
+                    .attr("fill", "none")  
+                    .attr("stroke", i === 0 ? "#3b82f6" : "#ef4444")  
+                    .attr("stroke-width", 2)  
+                    .attr("stroke-dasharray", "4,4")  
+                    .attr("d", line)  
+                    .style("opacity", 0)  
+                    .transition()  
+                    .duration(1000)  
+                    .delay(1500)  
+                    .style("opacity", 0.5);  
+            });  
+
+            const legend = svg.selectAll(".legend")  
+                .data(['CHANGI ROAD', 'UPPER CHANGI ROAD'])  
+                .enter()  
+                .append("g")  
+                .attr("class", "legend")  
+                .attr("transform", (d, i) => `translate(${width - margin.right + 20},${margin.top + i * 25})`);  
+
+            legend.append("rect")  
+                .attr("width", 15)  
+                .attr("height", 15)  
+                .attr("fill", d => colorScale(d))  
+                .attr("rx", 3);  
+
+            legend.append("text")  
+                .attr("x", 25)  
+                .attr("y", 12)  
+                .text(d => d)  
+                .attr("fill", "currentColor")  
+                .style("font-size", "14px");  
+        }  
+
+        createChart();  
+        updateStats();  
+        window.addEventListener('resize', createChart);  
+    </script>  
+</body>  
+</html>  
