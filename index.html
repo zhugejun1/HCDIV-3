@@ -19,7 +19,8 @@
         /* 大标题 */  
         .main-title {  
             font-size: 2.5rem;  
-            color: #1d4ed8; /* 蓝色标题 */  
+            color: #1d4ed8;  
+            /* 蓝色标题 */  
             font-weight: 700;  
             margin-bottom: 0.6rem;  
         }  
@@ -52,7 +53,8 @@
         }  
 
         .stat-card h3 {  
-            color: #64748b; /* 较浅颜色 */  
+            color: #64748b;  
+            /* 较浅颜色 */  
             font-weight: 500;  
             font-size: 0.9rem;  
         }  
@@ -116,13 +118,25 @@
         <div class="summary">  
             <h3 class="font-bold text-lg">Summary</h3>  
             <p>  
-                Over the years, property prices in the Changi area have consistently increased, reaching new highs in 2023.   
+                Over the years, property prices in the Changi area have consistently increased, reaching new highs in 2023.  
                 The gap between Changi Road properties and Upper Changi Road properties remains significant, suggesting different growth rates in the sub-areas.  
             </p>  
         </div>  
 
         <!-- 柱状图 -->  
-        <div class="chart-container" id="chart"></div>  
+        <div class="chart-container relative" id="chart">  
+            <!-- 新增图例 -->  
+            <div class="absolute top-4 right-6">  
+                <div class="flex items-center gap-2 mb-2">  
+                    <div class="w-4 h-4 bg-blue-500 rounded"></div>  
+                    <span class="text-gray-700 font-medium text-sm">CHANGI ROAD</span>  
+                </div>  
+                <div class="flex items-center gap-2">  
+                    <div class="w-4 h-4 bg-red-500 rounded"></div>  
+                    <span class="text-gray-700 font-medium text-sm">UPPER CHANGI ROAD</span>  
+                </div>  
+            </div>  
+        </div>  
     </div>  
 
     <script>  
