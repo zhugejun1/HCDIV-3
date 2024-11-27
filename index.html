@@ -24,10 +24,7 @@
             display: none;  
             z-index: 1000;  
             font-size: 14px;  
-            min-width: 120px;  
             text-align: left;  
-            transform: translate(-50%, -100%);  
-            margin-top: -10px;  
         }  
         .stat-card {  
             background: white;  
@@ -68,7 +65,6 @@
         .legend rect {  
             width: 15px;  
             height: 15px;  
-            margin-right: 5px;  
         }  
         .legend text {  
             font-size: 12px;  
@@ -217,14 +213,11 @@
                         .on("mouseover", function(event, d) {  
                             const tooltip = d3.select("#tooltip");  
                             tooltip.style("display", "block")  
-                                .html(`  
+                                   .html(`  
                                     <div class="font-semibold">${key}</div>  
                                     <div>${formatCurrency.format(d[key])}</div>  
                                     <div class="text-xs opacity-75">Year: ${d.year}</div>  
-                                `)  
-                                .style("left", (event.pageX) + "px")  
-                                .style("top", (event.pageY - 60) + "px");  
-                            
+                                   `);  
                             d3.select(this)  
                                 .attr("opacity", 0.8)  
                                 .attr("stroke", "#fff")  
@@ -232,11 +225,11 @@
                         })  
                         .on("mousemove", function(event) {  
                             const tooltip = d3.select("#tooltip");  
-                            tooltip.style("left", (event.pageX) + "px")  
-                                   .style("top", (event.pageY - 60) + "px");  
+                            tooltip.style("left", `${event.pageX}px`)  
+                                   .style("top", `${event.pageY}px`);  
                         })  
                         .on("mouseout", function() {  
-                            d3.select("#tooltip").style("display", "none");  
+                            const tooltip = d3.select("#tooltip").style("display", "none");  
                             d3.select(this)  
                                 .attr("opacity", 1)  
                                 .attr("stroke", "none");  
@@ -246,7 +239,7 @@
                 // 添加图例  
                 const legend = svg.append("g")  
                     .attr("class", "legend")  
-                    .attr("transform", `translate(${width - 150}, ${-40})`);  
+                    .attr("transform", `translate(-60, ${-40})`);  
 
                 ["CHANGI ROAD", "UPPER CHANGI ROAD"].forEach((key, i) => {  
                     const legendGroup = legend.append("g")  
